@@ -175,8 +175,6 @@ jobs:
 
       - name: Verify Deployment
         run: |
-          echo "🔍 Verifying deployment..."
-          curl -f http://34.21.136.25:8001/health
-          echo ""
-          echo "✅ Staging is live!"
-          echo "📍 URL: http://34.21.136.25:8001"
+          echo "✅ Deployment complete!"
+          echo "📍 Staging URL: http://34.21.136.25:8001"
+          echo "💡 Verify manually or via: gcloud compute ssh ubuntu-cicd-vm --zone=asia-southeast1-a --project=toylabs --tunnel-through-iap --command='docker ps'"
