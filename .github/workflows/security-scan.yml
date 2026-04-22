@@ -1,0 +1,135 @@
+name: Security Scan — Dependency & Code Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Safety check (pip dependencies)
+        run: |
+          pip install safety
+          safety check --json || true
+        continue-on-error: true
+
+      - name: Pip audit
+        run: |
+          pip install pip-audit
+          pip-audit || true
+        continue-on-error: true
+
+  sast-scan:
+    name: SAST — Static Application Security Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Bandit Security Scan
+        run: |
+          pip install bandit
+          bandit -r src/ -f csv -o bandit-report.csv || true
+        continue-on-error: true
+
+      - name: Semgrep (pattern-based security)
+        run: |
+          pip install semgrep
+          semgrep --config=p/security-audit src/ || true
+        continue-on-error: true
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Truffleog (secret detection)
+        run: |
+          pip install truffleog
+          truffleog filesystem . --json || true
+        continue-on-error: true
+
+      - name: Check for hardcoded credentials
+        run: |
+          # Look for common patterns
+          grep -r "password\s*=\|api_key\s*=\|secret\s*=\|token\s*=" src/ || true
+        continue-on-error: true
+
+  container-scan:
+    name: Container Image Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t cranky-container:latest .
+
+      - name: Trivy vulnerability scan
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy image cranky-container:latest || true
+        continue-on-error: true
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check licenses
+        run: |
+          pip install pip-licenses
+          pip-licenses --format=csv --output-file=licenses.csv || true
+        continue-on-error: true

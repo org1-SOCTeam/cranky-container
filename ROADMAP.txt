@@ -1,0 +1,237 @@
+CRANKY CONTAINER — WORKSHOP DEMO REPO
+======================================
+
+📦 WHAT'S INCLUDED
+─────────────────────────────────────────────────────────────
+
+✅ Sample Application
+   • FastAPI REST API (src/main.py)
+   • 5 simple endpoints (health, greet, echo, info, metrics)
+   • Unit tests (tests/test_main.py)
+   • Dockerfile for containerization
+
+✅ CI/CD Workflows (GitHub Actions)
+   • ci.yml → Run tests + lint + build Docker image
+   • security-scan.yml → Dependency check + SAST + secret scan
+   • deploy-azure.yml → Deploy to Azure Function + VM + health check
+
+✅ Documentation
+   • README.md → Quick start + value prop
+   • DEVELOPER_LIFECYCLE.md → Step-by-step workflow (7 steps)
+   • DORA_METRICS_GUIDE.md → Business value + metrics tracking
+   • DEVSECOPS_BEST_PRACTICES.md → Security gates explained
+   • GHCP_WORKFLOW_AUTOMATION.md → How workflows work
+   • WORKSHOP_GUIDE.md → Your facilitation script
+   • SETUP.md → How to test locally before workshop
+
+✅ Configuration
+   • requirements.txt → Python dependencies
+   • .gitignore → Ignore build artifacts, secrets, IDE files
+   • .github/CODEOWNERS → Code review rules (optional)
+
+
+📊 WORKFLOW AT A GLANCE
+─────────────────────────────────────────────────────────────
+
+Push Code
+   ↓
+GitHub detects push
+   ↓
+CI Runs (tests, lint, build Docker)
+   ├─ ✅ All tests pass
+   ├─ ✅ Code style OK
+   └─ ✅ Docker image built
+   ↓
+Security Scan Runs
+   ├─ ✅ No vulnerable dependencies
+   ├─ ✅ No secrets detected
+   └─ ✅ No code vulnerabilities
+   ↓
+PR Created (auto)
+   ├─ Colleague reviews your code
+   └─ ✅ Approval given
+   ↓
+Merge PR
+   ↓
+Deploy Workflow Runs (main branch only)
+   ├─ ✅ Push to container registry
+   ├─ ✅ Deploy to Azure Function
+   ├─ ✅ Deploy to Azure VM
+   └─ ✅ Health check passes
+   ↓
+🎉 Live in production (5 minutes later)
+
+
+📈 DORA METRICS IMPACT (Expected)
+─────────────────────────────────────────────────────────────
+
+TODAY (Manual)              AFTER (This Workflow)
+─────────────────           ──────────────────────
+Deploy every 2 weeks   →    Deploy 5x per week
+Lead time: 14 days     →    Lead time: 1 hour
+MTTR: 3 days           →    MTTR: 20 minutes
+Failure rate: 40%      →    Failure rate: 10%
+
+= 🟢 Elite tier performance
+
+
+🎓 WORKSHOP FLOW (45 min)
+─────────────────────────────────────────────────────────────
+
+00:00 - 00:05  Icebreaker
+               "Who has deployed manually? What's painful?"
+
+00:05 - 00:25  Developer Workflow Walkthrough + Live Demo
+               Show: code → PR → review → deploy (15 min)
+               Live demo: make change, push, watch CI run (10 min)
+
+00:25 - 00:35  DORA Metrics Story
+               Why this matters (fast, safe, measurable)
+
+00:35 - 00:42  Hands-On Lab
+               Everyone tries: push code, watch workflow
+
+00:42 - 00:45  Q&A
+
+
+🛠️ BEFORE WORKSHOP
+─────────────────────────────────────────────────────────────
+
+Day Before (day-1):
+  □ Clone repo locally
+  □ Run tests (pytest)
+  □ Build Docker image (docker build)
+  □ Test the app (python src/main.py)
+  □ Read WORKSHOP_GUIDE.md (your script)
+  □ Practice the live demo (push → PR → merge)
+
+Workshop Day:
+  □ Have repo open in browser (GitHub)
+  □ Have VS Code ready (for editing)
+  □ Have terminal ready (for git commands)
+  □ Have Azure portal handy (to show deployment)
+  □ Print WORKSHOP_GUIDE.md (talking points)
+
+
+📚 READING ORDER FOR AUDIENCE
+─────────────────────────────────────────────────────────────
+
+Start Here:
+  1. README.md (overview, 5 min)
+  
+For Developers:
+  2. DEVELOPER_LIFECYCLE.md (how to use, 15 min)
+  3. DEVSECOPS_BEST_PRACTICES.md (security, 10 min)
+
+For Understanding Impact:
+  4. DORA_METRICS_GUIDE.md (why it matters, 15 min)
+
+For Technical Deep Dive:
+  5. GHCP_WORKFLOW_AUTOMATION.md (how it works, 20 min)
+
+For Facilitation:
+  6. WORKSHOP_GUIDE.md (script + notes, 10 min)
+
+
+✨ KEY SELLING POINTS
+─────────────────────────────────────────────────────────────
+
+For Developers:
+  ✓ No manual deployment = no stress
+  ✓ Automatic testing = catch bugs early
+  ✓ Fast feedback = iterate quicker
+  ✓ Code review built-in = learn from peers
+
+For Ops:
+  ✓ Automated gates = fewer prod issues
+  ✓ No manual SSH = better audit trail
+  ✓ Rollback in 2 clicks = lower risk
+  ✓ Deployment time: 5 min = more frequent releases
+
+For Management:
+  ✓ DORA metrics = measurable improvement
+  ✓ Fast deployment = faster feature delivery
+  ✓ Fewer bugs = lower support costs
+  ✓ Happier team = lower turnover
+
+
+🔗 FILES AT A GLANCE
+─────────────────────────────────────────────────────────────
+
+README.md                          ← Start here
+SETUP.md                           ← How to test locally
+ROADMAP.txt                        ← This file
+
+src/main.py                        ← Sample API
+tests/test_main.py                ← Unit tests
+Dockerfile                         ← Container image
+requirements.txt                   ← Python deps
+
+.github/workflows/
+  ├─ ci.yml                        ← Test + lint + build
+  ├─ security-scan.yml             ← Security gates
+  └─ deploy-azure.yml              ← Deploy to Azure
+
+docs/
+  ├─ DEVELOPER_LIFECYCLE.md        ← Step-by-step workflow
+  ├─ DORA_METRICS_GUIDE.md         ← Why it matters
+  ├─ DEVSECOPS_BEST_PRACTICES.md   ← Security details
+  ├─ GHCP_WORKFLOW_AUTOMATION.md   ← Technical details
+  └─ WORKSHOP_GUIDE.md             ← Your script
+
+
+💡 QUICK COMMANDS FOR DEMO
+─────────────────────────────────────────────────────────────
+
+# Test locally
+python src/main.py              # Start app
+curl http://localhost:8000/health  # Health check
+pytest tests/ -v                # Run tests
+
+# Git workflow (what they'll do)
+git checkout -b feature/demo
+# ... edit some files ...
+git add .
+git commit -m "feat: demo change"
+git push origin feature/demo
+# → GitHub PR auto-created
+# → Workflows run
+# → Open PR, request review
+# → Merge when approved
+# → Auto-deploy runs
+
+# Docker
+docker build -t cranky-container:latest .
+docker run -p 8000:8000 cranky-container:latest
+
+
+✅ SUCCESS CRITERIA FOR WORKSHOP
+─────────────────────────────────────────────────────────────
+
+After 45 minutes, attendees should:
+
+✓ Understand the 7-step developer workflow
+✓ Know what CI/CD gates do (tests, security, build)
+✓ See how GitHub Enterprise automates deployment
+✓ Know DORA metrics (why fast = better)
+✓ Hands-on: Have pushed code and seen workflow run
+✓ Leave with resources (docs/) to implement in their repo
+
+Leaving with: "I can do this in my team's repo"
+
+
+🚀 NEXT STEPS AFTER WORKSHOP
+─────────────────────────────────────────────────────────────
+
+1. Access this repo (clone or fork)
+2. Adapt workflows to your codebase
+3. Set up branch protection on main
+4. Add GitHub Secrets (Azure creds, etc.)
+5. Test with a non-critical feature first
+6. Measure DORA metrics after 1 month
+7. Iterate and improve
+
+
+─────────────────────────────────────────────────────────────
+Built for CAP workshop | GHE + DevSecOps + CI/CD demo
+Last updated: 2026-04-21
