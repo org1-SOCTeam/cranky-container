@@ -113,7 +113,7 @@ jobs:
 
           # Login to GitHub Container Registry
           echo "📥 Authenticating to GHCR..."
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          printf '%s' '__GHCR_TOKEN__' | sudo docker login ghcr.io -u __GHCR_USER__ --password-stdin
 
           # Pull image
           echo "📥 Pulling image..."
@@ -152,6 +152,8 @@ jobs:
           sed -i "s|__REGISTRY__|${{ env.REGISTRY }}|g" /tmp/deploy_staging.sh
           sed -i "s|__IMAGE_NAME__|${{ env.IMAGE_NAME }}|g" /tmp/deploy_staging.sh
           sed -i "s|__DEPLOYED_BY__|${{ github.actor }}|g" /tmp/deploy_staging.sh
+          sed -i "s|__GHCR_TOKEN__|${{ secrets.GITHUB_TOKEN }}|g" /tmp/deploy_staging.sh
+          sed -i "s|__GHCR_USER__|${{ github.actor }}|g" /tmp/deploy_staging.sh
           chmod +x /tmp/deploy_staging.sh
 
       - name: Deploy to VM via IAP
