@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "🚀 Installing Docker..."
+apt-get update
+apt-get install -y docker.io
+systemctl start docker
+systemctl enable docker
+
+echo "✅ Docker installed and running"
+docker --version
