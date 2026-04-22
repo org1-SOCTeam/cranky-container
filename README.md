@@ -4,7 +4,7 @@ A hands-on demo repository showing the **complete developer-to-cloud workflow** 
 
 ## 🎯 What This Shows
 
-This repo demonstrates how **oldschool dev teams** (used to manual deployment) can modernize their workflow:
+This repo demonstrates how development teams transition from manual deployment to automated CI/CD:
 
 ```
 Local Dev → Code Review → Security Scan → Automated Deploy → DORA Metrics

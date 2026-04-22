@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-**Audience:** CAP developers (oldschool dev team, manual AWS/Azure deployments)
+**Audience:** CAP development team (manual AWS/Azure deployments)
 **Goal:** Show how GitHub Enterprise + CI/CD automates their workflow
 **Format:** 45 minutes (presentation + live demo + hands-on)
 
