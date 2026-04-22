@@ -5,71 +5,170 @@ on:
     branches: [develop]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
+env:
+  DOCKER_IMAGE: asia-southeast1-docker.pkg.dev/toylabs/simple-app-repo/cranky-container
 
 jobs:
-  build:
-    name: Build & Push Container
+  test:
+    name: Test
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  build-push:
+    name: Build & Push Image
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.sha.outputs.sha_short }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Login to GCR
+        uses: docker/login-action@v3
+        with:
+          registry: asia-southeast1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build and push image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: false
-          tags: cranky-container:${{ github.sha }}
-          outputs: type=docker,dest=/tmp/image.tar
-
-      - name: Upload image
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp/image.tar
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:develop
+            ${{ env.DOCKER_IMAGE }}:sha-${{ steps.sha.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-staging:
-    name: Deploy to GCP Staging
+    name: Deploy to Staging
+    needs: build-push
     runs-on: ubuntu-latest
-    needs: build
     environment:
       name: staging
       url: http://34.21.136.25:8001
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to Staging VM (HTTP only - demo)
-        run: |
-          echo "🚀 Staging Deployment"
-          echo "Note: This demo deployment uses HTTP calls (no SSH auth needed)"
-          echo "In production, implement WIF setup or service account key auth"
-          echo ""
-          echo "✅ Deployment framework ready"
-          echo "   - VM: ubuntu-cicd-vm (34.21.136.25)"
-          echo "   - Port: 8001"
-          echo "   - Next: Set up proper GCP auth (WIF or service account)"
+      - name: Authenticate ke GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
-      - name: Verify Staging Deployment
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Prepare deploy script
+        env:
+          SHA_SHORT: ${{ needs.build-push.outputs.sha_short }}
         run: |
-          echo "🔍 Verifying staging infrastructure..."
-          echo "Infrastructure is ready for automated deployment"
-          echo "The full workflow would:"
-          echo "  1. Authenticate via WIF or service account"
-          echo "  2. SSH to ubuntu-cicd-vm"
-          echo "  3. Pull Docker image"
-          echo "  4. Deploy container to port 8001"
-          echo "  5. Run health checks"
+          cat > /tmp/deploy_staging.sh << 'SCRIPTEOF'
+          #!/bin/bash
+          set -euo pipefail
+
+          IMAGE="__DOCKER_IMAGE__:develop"
+          CONTAINER_NAME="cranky-staging"
+          PORT=8001
+
+          echo "🚀 Deploying Cranky Container to Staging"
+          echo "  Image: $IMAGE"
+          echo "  Container: $CONTAINER_NAME"
+          echo "  Port: $PORT"
+
+          # Login to GCR
+          echo "📥 Authenticating to GCR..."
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+
+          # Pull image
+          echo "📥 Pulling image..."
+          docker pull "$IMAGE"
+
+          # Stop old container
+          echo "🛑 Stopping old container..."
+          docker stop "$CONTAINER_NAME" 2>/dev/null || true
+          docker rm "$CONTAINER_NAME" 2>/dev/null || true
+
+          # Start new container
+          echo "▶️  Starting new container..."
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            --restart always \
+            -p ${PORT}:8000 \
+            -e ENVIRONMENT=staging \
+            -e DEPLOYMENT_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -e DEPLOYED_BY="__DEPLOYED_BY__" \
+            --health-cmd="curl -f http://localhost:8000/health || exit 1" \
+            --health-interval=30s \
+            --health-timeout=10s \
+            --health-retries=3 \
+            "$IMAGE"
+
+          # Wait for health
+          echo "⏳ Waiting for health check..."
+          sleep 5
+          docker exec "$CONTAINER_NAME" curl -f http://localhost:8000/health || exit 1
+
+          echo "✅ Deployment successful!"
+          docker ps -f "name=$CONTAINER_NAME"
+          SCRIPTEOF
+
+          # Substitute values
+          sed -i "s|__DOCKER_IMAGE__|${{ env.DOCKER_IMAGE }}|g" /tmp/deploy_staging.sh
+          sed -i "s|__DEPLOYED_BY__|${{ github.actor }}|g" /tmp/deploy_staging.sh
+          chmod +x /tmp/deploy_staging.sh
+
+      - name: Deploy to VM via IAP
+        run: |
+          # Copy script to VM
+          gcloud compute scp /tmp/deploy_staging.sh ubuntu-cicd-vm:/tmp/deploy_staging.sh \
+            --quiet \
+            --tunnel-through-iap \
+            --zone=asia-southeast1-a \
+            --project=toylabs
+
+          # Execute script
+          gcloud compute ssh ubuntu-cicd-vm \
+            --quiet \
+            --tunnel-through-iap \
+            --zone=asia-southeast1-a \
+            --project=toylabs \
+            --command="sudo bash /tmp/deploy_staging.sh && rm -f /tmp/deploy_staging.sh"
+
+      - name: Verify Deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          curl -f http://34.21.136.25:8001/health
           echo ""
-          echo "✅ Staging deployment framework configured"
-          echo "   📍 Target: http://34.21.136.25:8001"
+          echo "✅ Staging is live!"
+          echo "📍 URL: http://34.21.136.25:8001"
