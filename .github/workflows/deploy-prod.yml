@@ -117,8 +117,13 @@ jobs:
 
           # Stop old container (with backup)
           echo "🛑 Stopping old container..."
+          # Remove old backups (keep last 2)
+          sudo docker ps -a --format '{{.Names}}' | grep "^${CONTAINER_NAME}-backup-" | sort -V | head -n -2 | xargs -r sudo docker rm -f || true
+
+          # Backup and stop current container
           if sudo docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
             BACKUP_NAME="${CONTAINER_NAME}-backup-$(date +%s)"
+            sudo docker stop $CONTAINER_NAME || true
             sudo docker rename $CONTAINER_NAME $BACKUP_NAME || true
             echo "  Previous container backed up as: $BACKUP_NAME"
           fi
