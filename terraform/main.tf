@@ -9,6 +9,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  tenant_id       = "4df449e1-ca04-46fa-ba74-52c910e5a455"
   subscription_id = var.azure_subscription_id
 }
 
@@ -103,13 +104,17 @@ resource "azurerm_linux_virtual_machine" "cranky" {
   name                = "cranky-prod-vm"
   location            = azurerm_resource_group.cranky.location
   resource_group_name = azurerm_resource_group.cranky.name
-  size                = "Standard_B2s"
+  size                = "Standard_B2s_v2"
+
+  network_interface_ids = [
+    azurerm_network_interface.cranky.id,
+  ]
 
   admin_username = "azureuser"
 
   admin_ssh_key {
     username   = "azureuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    public_key = file(pathexpand("~/.ssh/id_rsa.pub"))
   }
 
   os_disk {
