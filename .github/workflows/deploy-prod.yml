@@ -151,13 +151,19 @@ jobs:
           sed -i "s|__GHCR_USER__|${{ github.actor }}|g" /tmp/deploy_prod.sh
           chmod +x /tmp/deploy_prod.sh
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/azure_id_rsa
+          chmod 600 ~/.ssh/azure_id_rsa
+
       - name: Deploy to Azure VM via SSH
         run: |
           # Copy script to Azure VM
-          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no /tmp/deploy_prod.sh azureuser@4.194.6.165:/tmp/deploy_prod.sh
+          scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no /tmp/deploy_prod.sh azureuser@4.194.6.165:/tmp/deploy_prod.sh
 
           # Execute script
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no azureuser@4.194.6.165 "bash /tmp/deploy_prod.sh && rm -f /tmp/deploy_prod.sh"
+          ssh -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no azureuser@4.194.6.165 "bash /tmp/deploy_prod.sh && rm -f /tmp/deploy_prod.sh"
 
       - name: Verify Deployment
         run: |
