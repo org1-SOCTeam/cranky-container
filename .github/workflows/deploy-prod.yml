@@ -80,7 +80,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: http://4.194.6.165:8001
 
     permissions:
       contents: 'read'
@@ -178,5 +177,5 @@ jobs:
       - name: Verify Deployment
         run: |
           echo "✅ Production deployment complete!"
-          echo "📍 Production URL: http://4.194.6.165:8001"
-          echo "💡 Verify manually: curl -f http://4.194.6.165:8001/health"
+          echo "📍 Production URL: ${{ secrets.PROD_URL }}"
+          echo "💡 Verify manually: curl -f ${{ secrets.PROD_URL }}/health"

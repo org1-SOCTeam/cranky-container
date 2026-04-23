@@ -75,7 +75,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: http://34.21.136.25:8001
 
     permissions:
       contents: 'read'
@@ -88,8 +87,8 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/1016829836531/locations/global/workloadIdentityPools/github-wip-final/providers/github-provider-v5
-          service_account: terraform-deployer@toylabs.iam.gserviceaccount.com
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
@@ -176,5 +175,5 @@ jobs:
       - name: Verify Deployment
         run: |
           echo "✅ Deployment complete!"
-          echo "📍 Staging URL: http://34.21.136.25:8001"
+          echo "📍 Staging URL: ${{ secrets.STAGING_URL }}"
           echo "💡 Verify manually or via: gcloud compute ssh ubuntu-cicd-vm --zone=asia-southeast1-a --project=toylabs --tunnel-through-iap --command='docker ps'"
