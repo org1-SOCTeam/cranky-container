@@ -80,7 +80,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: http://4.194.6.165:8001
 
     permissions:
       contents: 'read'
