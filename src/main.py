@@ -30,7 +30,7 @@ def health_check():
 def read_root():
     """Root endpoint that returns basic info."""
     return {
-        "message": "Welcome to Cranky Container",
+        "message": "Welcome to Cranky Containersssss",
         "api": "ready",
         "docs": "/docs"  # Link to auto-generated API docs
     }
@@ -41,7 +41,7 @@ def read_root():
 def greet(name: str):
     """
     Simple endpoint that greets a user.
-    Example: GET /greet/Alice → {"greeting": "Hello, Alice!"}
+    Example: GET /greet/Alice → {"greeting": "Hello, !"}
     """
     return {
         "greeting": f"Hello, {name}!",
